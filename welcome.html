@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ReplyGuy – Minimal Twitter/X AI Reply Extension</title>
+    <link rel="icon" href="images/XReplyGPT.png" type="image/x-icon" />
+    <link
+      href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", "Source Sans Pro", sans-serif;
+        background: linear-gradient(120deg, #f8fafc 0%, #e0e7ef 100%);
+        color: #222;
+      }
+      .card {
+        background: #fff;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+        padding: 2.5rem 2rem;
+        max-width: 420px;
+        margin: 3rem auto;
+      }
+      .logo {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+      }
+      .title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        letter-spacing: -1px;
+        margin-bottom: 0.5rem;
+      }
+      .desc {
+        color: #4b5563;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+      }
+      .steps {
+        margin: 0 0 1.5rem 0;
+        padding: 0;
+        list-style: none;
+      }
+      .steps li {
+        margin-bottom: 0.7rem;
+        padding-left: 1.2rem;
+        position: relative;
+        color: #374151;
+        font-size: 1rem;
+      }
+      .steps li:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.5em;
+        width: 0.5em;
+        height: 0.5em;
+        background: #2563eb;
+        border-radius: 50%;
+      }
+      .footer {
+        text-align: center;
+        color: #9ca3af;
+        font-size: 0.95rem;
+        margin-top: 2.5rem;
+      }
+      a {
+        color: #2563eb;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <img src="images/XReplyGPT.png" alt="ReplyGuy Logo" class="logo" />
+      <div class="title">ReplyGuy</div>
+      <div class="desc">
+        A minimal, beautiful extension to generate smart replies on Twitter/X
+        using AI. No clutter, just results.
+      </div>
+      <ul class="steps">
+        <li>Install the extension from the Chrome Web Store.</li>
+        <li>
+          Open the extension and add your API key (OpenAI, DeepSeek, or
+          OpenRouter).
+        </li>
+        <li>Choose your preferred AI model.</li>
+        <li>
+          Go to <a href="https://x.com" target="_blank">x.com</a> and use the
+          shortcut to generate a reply.
+        </li>
+        <li>Click the generated reply to send it.</li>
+      </ul>
+      <div class="footer">
+        &copy; 2024 ReplyGuy.
+        <a href="https://github.com/vbh1v" target="_blank">GitHub</a>
+      </div>
+    </div>
+  </body>
+</html>
