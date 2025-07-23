@@ -190,6 +190,8 @@ function generateReply() {
         endpoint = "https://api.deepseek.com/v1/chat/completions";
       } else if (provider === "openrouter") {
         endpoint = "https://openrouter.ai/api/v1/chat/completions";
+      } else if (provider === "grok") {
+        endpoint = "https://api.x.ai/v1/chat/completions";
       } else {
         endpoint = "https://api.openai.com/v1/chat/completions";
       }
@@ -342,3 +344,153 @@ function generateReply() {
 window.generateReply = generateReply;
 
 generateReply();
+
+// --- AUTO-REPLY AUTOMATION ---
+(function autoReplyInit() {
+  let autoReplyActive = false;
+  let autoReplyTimer = null;
+  let fakeCursor = null;
+
+  async function getSettings() {
+    const settings = await chrome.storage.local.get([
+      "auto-reply-enabled",
+      "auto-reply-users",
+    ]);
+    return {
+      enabled: !!settings["auto-reply-enabled"],
+      users: (settings["auto-reply-users"] || "")
+        .split(/[,\n]+/)
+        .map((u) => u.trim().replace(/^@/, ""))
+        .filter(Boolean),
+    };
+  }
+
+  function getVisibleTweets() {
+    return Array.from(document.querySelectorAll('[data-testid="tweet"]'));
+  }
+
+  function getTweetUsername(article) {
+    const user = article.querySelector('[data-testid="User-Name"]');
+    if (!user) return null;
+    const spans = user.querySelectorAll("span");
+    for (let i = 0; i < spans.length; i++) {
+      if (spans[i].innerText.startsWith("@")) {
+        return spans[i].innerText.replace(/^@/, "").trim();
+      }
+    }
+    return null;
+  }
+
+  function hasGeneratedReply(article) {
+    return article.querySelectorAll('[id="generated-reply"]').length > 0;
+  }
+
+  function pickTargetTweet(tweets, targetUsers) {
+    for (const article of tweets) {
+      const username = getTweetUsername(article);
+      if (
+        username &&
+        targetUsers.includes(username) &&
+        !hasGeneratedReply(article)
+      ) {
+        return article;
+      }
+    }
+    return null;
+  }
+
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function simulateMouseMovement() {
+    // Create a fake cursor if not present
+    if (!fakeCursor) {
+      fakeCursor = document.createElement("div");
+      fakeCursor.style.position = "fixed";
+      fakeCursor.style.zIndex = 99999;
+      fakeCursor.style.width = "18px";
+      fakeCursor.style.height = "18px";
+      fakeCursor.style.borderRadius = "50%";
+      fakeCursor.style.background = "rgba(37,99,235,0.7)";
+      fakeCursor.style.pointerEvents = "none";
+      fakeCursor.style.transition =
+        "top 0.4s cubic-bezier(.4,2,.6,1), left 0.4s cubic-bezier(.4,2,.6,1)";
+      document.body.appendChild(fakeCursor);
+    }
+    // Move to a random position on the viewport
+    const x = randomInt(20, window.innerWidth - 20);
+    const y = randomInt(60, window.innerHeight - 20);
+    fakeCursor.style.left = x + "px";
+    fakeCursor.style.top = y + "px";
+    // Optionally, trigger mouseover on a random element
+    const elements = document.elementsFromPoint(x, y);
+    if (elements.length > 1) {
+      const el = elements[1];
+      const evt = new MouseEvent("mouseover", { bubbles: true });
+      el.dispatchEvent(evt);
+    }
+  }
+
+  async function autoReplyLoop() {
+    if (!autoReplyActive) return;
+    const { enabled, users } = await getSettings();
+    if (!enabled || !users.length) {
+      autoReplyActive = false;
+      if (fakeCursor) {
+        fakeCursor.remove();
+        fakeCursor = null;
+      }
+      return;
+    }
+    const tweets = getVisibleTweets();
+    const targetTweet = pickTargetTweet(tweets, users);
+    if (targetTweet) {
+      // Scroll into view and simulate mouse movement
+      targetTweet.scrollIntoView({ behavior: "smooth", block: "center" });
+      simulateMouseMovement();
+      // Wait a bit before replying to look more human
+      setTimeout(() => {
+        window.generateReply && window.generateReply();
+      }, randomInt(1200, 2200));
+    } else {
+      simulateMouseMovement();
+    }
+    // Schedule next run
+    const nextDelay = randomInt(30000, 40000); // 30-40s
+    autoReplyTimer = setTimeout(autoReplyLoop, nextDelay);
+  }
+
+  async function startAutoReplyIfEnabled() {
+    const { enabled } = await getSettings();
+    if (enabled && !autoReplyActive) {
+      autoReplyActive = true;
+      autoReplyLoop();
+    }
+  }
+
+  // Listen for changes in storage to start/stop automation
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (
+      area === "local" &&
+      ("auto-reply-enabled" in changes || "auto-reply-users" in changes)
+    ) {
+      getSettings().then(({ enabled }) => {
+        if (enabled && !autoReplyActive) {
+          autoReplyActive = true;
+          autoReplyLoop();
+        } else if (!enabled && autoReplyActive) {
+          autoReplyActive = false;
+          if (autoReplyTimer) clearTimeout(autoReplyTimer);
+          if (fakeCursor) {
+            fakeCursor.remove();
+            fakeCursor = null;
+          }
+        }
+      });
+    }
+  });
+
+  // Initial check on load
+  startAutoReplyIfEnabled();
+})();

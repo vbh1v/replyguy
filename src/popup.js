@@ -4,6 +4,8 @@ function getModels(apiKey, provider) {
     endpoint = "https://api.deepseek.com/v1/models";
   } else if (provider === "openrouter") {
     endpoint = "https://openrouter.ai/api/v1/models";
+  } else if (provider === "grok") {
+    endpoint = "https://api.x.ai/v1/models";
   } else {
     endpoint = "https://api.openai.com/v1/models";
   }
@@ -93,6 +95,7 @@ document.addEventListener("DOMContentLoaded", function () {
       let placeholder = "OpenAI platform API key";
       if (provider === "deepseek") placeholder = "DeepSeek API key";
       if (provider === "openrouter") placeholder = "OpenRouter API key";
+      if (provider === "grok") placeholder = "X (Twitter) API key";
       document.getElementById("api-key").placeholder = placeholder;
       validateApiKey();
     });
@@ -156,6 +159,36 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("Automatic window close disabled");
           });
       }
+    });
+
+  // Auto-reply toggle save
+  document
+    .getElementById("auto-reply-toggle")
+    .addEventListener("change", function () {
+      const enabled = document.getElementById("auto-reply-toggle").checked;
+      chrome.storage.local.set({ "auto-reply-enabled": enabled }).then(() => {
+        console.log("Auto-reply enabled:", enabled);
+      });
+    });
+
+  // Target users textarea save
+  document
+    .getElementById("target-users")
+    .addEventListener("change", function () {
+      const users = document.getElementById("target-users").value;
+      chrome.storage.local.set({ "auto-reply-users": users }).then(() => {
+        console.log("Auto-reply target users saved");
+      });
+    });
+
+  // Load auto-reply settings on popup open
+  chrome.storage.local
+    .get(["auto-reply-enabled", "auto-reply-users"])
+    .then((result) => {
+      document.getElementById("auto-reply-toggle").checked =
+        !!result["auto-reply-enabled"];
+      document.getElementById("target-users").value =
+        result["auto-reply-users"] || "";
     });
 
   // Set query by default is it is already there
